@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int           @id() @default(autoincrement())
+  email      String        @unique
+  name       String
+  password   String
+  isVerified Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  role       UserRole
+  company    Company       @relation(fields: [companyId], references: [id])
+  companyId  Int
+  tickets    Ticket[]
+  contacts   UserContact[]
+}
+
+enum UserRole {
+  COMPANY_ADMIN
+  COMPANY_STAFF
+}
+
+model Company {
+  id          Int          @id() @default(autoincrement())
+  users       User[]
+  departments Department[]
+  devices     Device[]
+  automations Automation[]
+}
+
+model Department {
+  id        Int      @id() @default(autoincrement())
+  name      String
+  color     String
+  funnels   Funnel[]
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId Int
+}
+
+model Funnel {
+  id           Int          @id() @default(autoincrement())
+  name         String
+  color        String
+  department   Department   @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  automations  Automation[]
+}
+
+model Device {
+  id          Int      @id() @default(autoincrement())
+  isActive    Boolean  @default(false)
+  phoneNumber String
+  company     Company  @relation(fields: [companyId], references: [id])
+  companyId   Int
+  tickets     Ticket[]
+}
+
+model Automation {
+  id        Int                @id @default(autoincrement())
+  name      String
+  company   Company            @relation(fields: [companyId], references: [id])
+  companyId Int
+  funnels   Funnel[]
+  scripts   AutomationScript[]
+}
+
+model AutomationScript {
+  id           Int        @id @default(autoincrement())
+  message      String
+  days         Int
+  automation   Automation @relation(fields: [automationId], references: [id])
+  automationId Int
+}
+
+model Contact {
+  id            Int           @id @default(autoincrement())
+  name          String
+  profileImgURL String
+  phoneNumber   String
+  tickets       Ticket[]
+  users         UserContact[] @ignore
+}
+
+model UserContact {
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  contact   Contact  @relation(fields: [contactId], references: [id])
+  contactId Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, contactId])
+}
+
+enum TicketStatus {
+  OPEN
+  CLOSED
+}
+
+model Ticket {
+  id         Int          @id @default(autoincrement())
+  assignee   User         @relation(fields: [assigneeId], references: [id])
+  assigneeId Int
+  status     TicketStatus @default(OPEN)
+  contact    Contact      @relation(fields: [contactId], references: [id])
+  contactId  Int
+  device     Device       @relation(fields: [deviceId], references: [id])
+  deviceId   Int
+  updatedAt  DateTime     @default(now())
+  createdAt  DateTime     @default(now())
+  messages   Message[]
+}
+
+model Message {
+  id       Int      @id @default(autoincrement())
+  ticket   Ticket   @relation(fields: [ticketId], references: [id])
+  ticketId Int
+  senderId Int // Could be `User` or `Contact`
+  sentAt   DateTime
+  content  String
+}

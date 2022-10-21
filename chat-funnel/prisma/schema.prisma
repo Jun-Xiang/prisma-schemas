@@ -4,6 +4,7 @@ generator client {
 
 generator erd {
   provider = "prisma-erd-generator"
+  output   = "./ERD.png"
 }
 
 datasource db {
@@ -56,13 +57,21 @@ model Funnel {
   automations  Automation[]
 }
 
+model WAServer {
+  id      Int      @id @default(autoincrement())
+  url     String
+  devices Device[]
+}
+
 model Device {
-  id          Int      @id() @default(autoincrement())
-  isActive    Boolean  @default(false)
-  phoneNumber String
-  company     Company  @relation(fields: [companyId], references: [id])
-  companyId   Int
-  tickets     Ticket[]
+  id              Int      @id() @default(autoincrement())
+  isActive        Boolean  @default(false)
+  phoneNumber     String
+  company         Company  @relation(fields: [companyId], references: [id])
+  companyId       Int
+  whastsappServer WAServer @relation(fields: [wAServerId], references: [id])
+  wAServerId      Int
+  tickets         Ticket[]
 }
 
 model Automation {
@@ -121,10 +130,13 @@ model Ticket {
 }
 
 model Message {
-  id       Int      @id @default(autoincrement())
-  ticket   Ticket   @relation(fields: [ticketId], references: [id])
-  ticketId Int
-  senderId Int // Could be `User` or `Contact`
-  sentAt   DateTime
-  content  String
+  id         Int       @id @default(autoincrement())
+  ticket     Ticket    @relation(fields: [ticketId], references: [id])
+  ticketId   Int
+  senderId   Int // Could be `User` or `Contact`
+  receiverId Int // Could be `User` or `Contact`
+  hasRead    Boolean   @default(false)
+  readAt     DateTime?
+  sentAt     DateTime
+  content    String
 }

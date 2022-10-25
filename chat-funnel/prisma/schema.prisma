@@ -18,13 +18,15 @@ model User {
   name        String
   password    String
   isVerified  Boolean       @default(false)
-  createdAt   DateTime      @default(now())
   role        UserRole
   company     Company       @relation(fields: [companyId], references: [id])
   companyId   Int
   tickets     Ticket[]
   contacts    UserContact[]
   departments Department[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 enum UserRole {
@@ -38,6 +40,9 @@ model Company {
   departments Department[]
   devices     Device[]
   automations Automation[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model Department {
@@ -47,7 +52,10 @@ model Department {
   funnels   Funnel[]
   company   Company  @relation(fields: [companyId], references: [id])
   companyId Int
-  users      User[]
+  users     User[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model Funnel {
@@ -57,6 +65,9 @@ model Funnel {
   department   Department   @relation(fields: [departmentId], references: [id])
   departmentId Int
   automations  Automation[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model WAServer {
@@ -74,6 +85,9 @@ model Device {
   whastsappServer WAServer @relation(fields: [wAServerId], references: [id])
   wAServerId      Int
   tickets         Ticket[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model Automation {
@@ -83,14 +97,20 @@ model Automation {
   companyId Int
   funnels   Funnel[]
   scripts   AutomationScript[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model AutomationScript {
-  id           Int        @id @default(autoincrement())
-  message      String
-  days         Int
-  automation   Automation @relation(fields: [automationId], references: [id])
-  automationId Int
+  id            Int        @id @default(autoincrement())
+  message       String
+  delayDuration Int // In seconds
+  automation    Automation @relation(fields: [automationId], references: [id])
+  automationId  Int
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model Contact {
@@ -100,14 +120,19 @@ model Contact {
   phoneNumber   String
   tickets       Ticket[]
   users         UserContact[] @ignore
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model UserContact {
-  user      User     @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
   userId    Int
-  contact   Contact  @relation(fields: [contactId], references: [id])
+  contact   Contact @relation(fields: [contactId], references: [id])
   contactId Int
-  createdAt DateTime @default(now())
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@unique([userId, contactId])
 }
@@ -126,19 +151,22 @@ model Ticket {
   contactId  Int
   device     Device       @relation(fields: [deviceId], references: [id])
   deviceId   Int
-  updatedAt  DateTime     @default(now())
-  createdAt  DateTime     @default(now())
   messages   Message[]
+
+  updatedAt DateTime  @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
 model Message {
-  id         Int       @id @default(autoincrement())
-  ticket     Ticket    @relation(fields: [ticketId], references: [id])
-  ticketId   Int
-  senderId   Int // Could be `User` or `Contact`
-  receiverId Int // Could be `User` or `Contact`
-  hasRead    Boolean   @default(false)
-  readAt     DateTime?
-  sentAt     DateTime
-  content    String
+  id           Int       @id @default(autoincrement())
+  ticket       Ticket    @relation(fields: [ticketId], references: [id])
+  ticketId     Int
+  senderId     Int // Could be `User` or `Contact`
+  receiverId   Int // Could be `User` or `Contact`
+  fromCustomer Boolean
+  hasRead      Boolean   @default(false)
+  readAt       DateTime?
+  sentAt       DateTime
+  content      String
 }
